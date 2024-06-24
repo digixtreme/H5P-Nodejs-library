@@ -99,6 +99,7 @@ export default async function createH5PEditor(
     if (process.env.LIBRARYSTORAGE === 'mongo') {
         debug('h5p-example')('Using pure MongoDB for library storage.');
         const mongoLibraryStorage = new dbImplementations.MongoLibraryStorage(
+            //@ts-ignore
             (await getMongoDb()).collection(
                 process.env.LIBRARY_MONGO_COLLECTION
             )
@@ -113,6 +114,7 @@ export default async function createH5PEditor(
                     s3ForcePathStyle: true,
                     signatureVersion: 'v4'
                 }),
+                //@ts-ignore
                 (await getMongoDb()).collection(
                     process.env.LIBRARY_MONGO_COLLECTION
                 ),
@@ -138,6 +140,7 @@ export default async function createH5PEditor(
     if (process.env.USERDATASTORAGE === 'mongo') {
         const mongoContentUserDataStorage =
             new dbImplementations.MongoContentUserDataStorage(
+                //@ts-ignore
                 (await getMongoDb()).collection(
                     process.env.USERDATA_MONGO_COLLECTION
                 ),
@@ -173,6 +176,7 @@ export default async function createH5PEditor(
                       s3ForcePathStyle: true,
                       signatureVersion: 'v4'
                   }),
+                  //@ts-ignore
                   (await getMongoDb()).collection(
                       process.env.CONTENT_MONGO_COLLECTION
                   ),

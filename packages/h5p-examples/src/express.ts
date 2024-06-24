@@ -17,12 +17,15 @@ import {
 } from '@lumieducation/h5p-express';
 import H5PHtmlExporter from '@lumieducation/h5p-html-exporter';
 import * as H5P from '@lumieducation/h5p-server';
+//import * as H5P from '../../h5p-server/src/index'
 
 import startPageRenderer from './startPageRenderer';
 import expressRoutes from './expressRoutes';
 import User from './User';
 import createH5PEditor from './createH5PEditor';
 import { displayIps, clearTempFiles } from './utils';
+import { authenticateToken, getUserFromSession } from './authenticateToken';
+import session from 'express-session';
 
 let tmpDir: DirectoryResult;
 
@@ -96,6 +99,7 @@ const start = async (): Promise<void> => {
         path.join(__dirname, '../h5p/user-data'),
         (key, language) => translationFunction(key, { lng: language })
     );
+    h5pEditor.setRenderer((model) => model);
 
     // The H5PPlayer object is used to display H5P content.
     const h5pPlayer = new H5P.H5PPlayer(
@@ -108,6 +112,7 @@ const start = async (): Promise<void> => {
         undefined,
         h5pEditor.contentUserDataStorage
     );
+    h5pPlayer.setRenderer((model) => model);
 
     // We now set up the Express server in the usual fashion.
     const server = express();
@@ -136,14 +141,30 @@ const start = async (): Promise<void> => {
         });
     }
 
+    server.use(
+        session({ 
+            secret: 'mysecret', 
+            resave: false, 
+            saveUninitialized: false,
+            cookie: { maxAge: 60000 * 60 * 24 } // session timeout of 60 seconds
+        })
+    );
+
     // It is important that you inject a user object into the request object!
     // The Express adapter below (H5P.adapters.express) expects the user
     // object to be present in requests.
     // In your real implementation you would create the object using sessions,
     // JSON webtokens or some other means.
-    server.use((req: IRequestWithUser, res, next) => {
-        req.user = new User();
-        next();
+    server.use( async (req: IRequestWithUser, res, next) => {
+        //req.user = new User();
+        //next();
+        let user = await getUserFromSession(req);
+        if(user.id === "")
+            return res.status(401).json({ error: 'Authentication failed' })
+        else {
+            req.user = user
+            next()
+        }
     });
 
     // The i18nextExpressMiddleware injects the function t(...) into the req
@@ -255,7 +276,7 @@ const start = async (): Promise<void> => {
         );
     }
 
-    const port = process.env.PORT || '8080';
+    const port = process.env.PORT || '18628';
 
     // For developer convenience we display a list of IPs, the server is running
     // on. You can then simply click on it in the terminal.

@@ -43,3 +43,14 @@ export async function clearTempFiles(
         )
     );
 }
+
+export async function d2lAuth (token:string="", sso:string="false") {
+    let headers:any = {};
+    headers['d2l-sso'] = sso;
+    headers['Authorization'] = `${token || ""}`
+    const response = await fetch("https://api.digi2learn.com/api/v1/users/sso-auth", {
+        'headers': headers,
+    })
+
+    return response
+}
